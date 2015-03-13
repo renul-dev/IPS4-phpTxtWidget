@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin name="PHP &amp; TXT Widget" version_long="10000" version_human="1.0.0" author="Sijad aka Mr.Wosi" website="http://skinod..com" update_check="http://skinod.com/updatechk/sodphptxtwidget"><hooks/><settings><setting><key>sod_php_txt_widget_active_php</key><default>0</default></setting></settings><settingsCode><![CDATA[//<?php
+
+$form->add( new \IPS\Helpers\Form\YesNo( 'sod_php_txt_widget_active_php', \IPS\Settings::i()->sod_php_txt_widget_active_php ) );
+
+if ( $values = $form->values() )
+{
+	$form->saveAsSettings();
+	return TRUE;
+}
+
+return $form;]]></settingsCode><tasks/><widgets><widget key="sodPhpWidget" class="\IPS\Widget" restrict="sidebar,cms" default_area="" allow_reuse="1" menu_style="modal" embeddable="1"><![CDATA[<?php
+/**
+ * @brief		sodPhpWidget Widget
+ * @author		<a href='http://www.invisionpower.com'>Invision Power Services, Inc.</a>
+ * @copyright	(c) 2001 - SVN_YYYY Invision Power Services, Inc.
+ * @license		http://www.invisionpower.com/legal/standards/
+ * @package		IPS Social Suite
+ * @subpackage	sodPhpTxtWidget
+ * @since		10 Mar 2015
+ * @version		SVN_VERSION_NUMBER
+ */
+
+namespace IPS\plugins\<{LOCATION}>\widgets;
+
+/* To prevent PHP errors (extending class does not exist) revealing path */
+if ( !defined( '\IPS\SUITE_UNIQUE_KEY' ) )
+{
+	header( ( isset( $_SERVER['SERVER_PROTOCOL'] ) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0' ) . ' 403 Forbidden' );
+	exit;
+}
+
+/**
+ * sodPhpWidget Widget
+ */
+class _sodPhpWidget extends \IPS\Widget
+{
+	/**
+	 * @brief	Widget Key
+	 */
+	public $key = 'sodPhpWidget';
+	
+	/**
+	 * @brief	App
+	 */
+	public $app = '';
+		
+	/**
+	 * @brief	Plugin
+	 */
+	public $plugin = '<{ID}>';
+	
+	/**
+	 * Initialise this widget
+	 *
+	 * @return void
+	 */ 
+	public function init()
+	{
+		parent::init();
+
+		if(!\IPS\Settings::i()->sod_php_txt_widget_active_php)
+			throw new \Exception("PHP widget is not available");
+
+		$this->template( array( \IPS\Theme::i()->getTemplate( 'plugins', 'core', 'global' ), $this->key ) );
+	}
+	
+	/**
+	 * Specify widget configuration
+	 *
+	 * @param	null|\IPS\Helpers\Form	$form	Form object
+	 * @return	null|\IPS\Helpers\Form
+	 */
+	public function configuration( &$form=null )
+	{
+ 		if ( $form === null )
+		{
+	 		$form = new \IPS\Helpers\Form;
+ 		}
+
+ 		$form->add( new \IPS\Helpers\Form\Text( 'sod_php_widget_title', isset( $this->configuration['sod_php_widget_title'] ) ? $this->configuration['sod_php_widget_title'] : '', FALSE ) );
+		$form->add( new \IPS\Helpers\Form\Text( 'sod_php_widget_desc', isset( $this->configuration['sod_php_widget_desc'] ) ? $this->configuration['sod_php_widget_desc'] : '', FALSE ) );
+		$form->add( new \IPS\Helpers\Form\TextArea( 'sod_php_widget_text', isset( $this->configuration['sod_php_widget_text'] ) ? $this->configuration['sod_php_widget_text'] : '', TRUE, array('rows' => 7) ) );
+		$form->add( new \IPS\Helpers\Form\Select( 'sod_php_widget_who_can_see', isset( $this->configuration['sod_php_widget_who_can_see'] ) ? $this->configuration['sod_php_widget_who_can_see'] : '', TRUE, array( 'options' => \IPS\Member\Group::groups(), 'parse' => 'normal', 'multiple' => true, 'unlimited' => '*', 'unlimitedLang' => 'everyone' ) ) );
+
+ 		return $form;
+ 	} 
+ 	
+ 	 /**
+ 	 * Ran before saving widget configuration
+ 	 *
+ 	 * @param	array	$values	Values from form
+ 	 * @return	array
+ 	 */
+ 	public function preConfig( $values )
+ 	{
+ 		return $values;
+ 	}
+
+	/**
+	 * Render a widget
+	 *
+	 * @return	string
+	 */
+	public function render()
+	{
+		$this->configuration['sod_php_widget_title'] 			= isset($this->configuration['sod_php_widget_title']) ?$this->configuration['sod_php_widget_title']: '';
+		$this->configuration['sod_php_widget_desc'] 			= isset($this->configuration['sod_php_widget_desc']) ?$this->configuration['sod_php_widget_desc']: '';
+		$this->configuration['sod_php_widget_text'] 			= isset($this->configuration['sod_php_widget_text']) ?$this->configuration['sod_php_widget_text']: '';
+		$this->configuration['sod_php_widget_who_can_see'] 		= isset($this->configuration['sod_php_widget_who_can_see']) ?$this->configuration['sod_php_widget_who_can_see']: '';
+
+		if ( $this->configuration['sod_php_widget_who_can_see'] != '*' && !\IPS\Member::loggedIn()->inGroup( $this->configuration['sod_php_widget_who_can_see'], TRUE ) || empty($this->configuration['sod_php_widget_text']) ) {
+			return '';
+		}
+
+		ob_start();
+		echo eval('?>' . $this->configuration['sod_php_widget_text']);
+		$buffer = ob_get_contents();
+		@ob_end_clean();
+
+		return $this->output( $this->configuration['sod_php_widget_title'], $buffer, $this->configuration['sod_php_widget_desc'] );
+	}
+}]]></widget><widget key="sodTxtWidget" class="\IPS\Widget" restrict="sidebar,cms" default_area="" allow_reuse="1" menu_style="modal" embeddable="1"><![CDATA[<?php
+/**
+ * @brief		sodTxtWidget Widget
+ * @author		<a href='http://www.invisionpower.com'>Invision Power Services, Inc.</a>
+ * @copyright	(c) 2001 - SVN_YYYY Invision Power Services, Inc.
+ * @license		http://www.invisionpower.com/legal/standards/
+ * @package		IPS Social Suite
+ * @subpackage	sodPhpTxtWidget
+ * @since		10 Mar 2015
+ * @version		SVN_VERSION_NUMBER
+ */
+
+namespace IPS\plugins\<{LOCATION}>\widgets;
+
+/* To prevent PHP errors (extending class does not exist) revealing path */
+if ( !defined( '\IPS\SUITE_UNIQUE_KEY' ) )
+{
+	header( ( isset( $_SERVER['SERVER_PROTOCOL'] ) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0' ) . ' 403 Forbidden' );
+	exit;
+}
+
+/**
+ * sodTxtWidget Widget
+ */
+class _sodTxtWidget extends \IPS\Widget
+{
+	/**
+	 * @brief	Widget Key
+	 */
+	public $key = 'sodTxtWidget';
+	
+	/**
+	 * @brief	App
+	 */
+	public $app = '';
+		
+	/**
+	 * @brief	Plugin
+	 */
+	public $plugin = '<{ID}>';
+	
+	/**
+	 * Initialise this widget
+	 *
+	 * @return void
+	 */ 
+	public function init()
+	{
+		parent::init();
+		// Use this to perform any set up and to assign a template that is not in the following format:
+		// throw new \Exception("Error Processing Request");
+		
+		$this->template( array( \IPS\Theme::i()->getTemplate( 'plugins', 'core', 'global' ), $this->key ) );
+	}
+	
+	/**
+	 * Specify widget configuration
+	 *
+	 * @param	null|\IPS\Helpers\Form	$form	Form object
+	 * @return	null|\IPS\Helpers\Form
+	 */
+	public function configuration( &$form=null )
+	{
+ 		if ( $form === null )
+		{
+	 		$form = new \IPS\Helpers\Form;
+ 		}
+
+		$form->add( new \IPS\Helpers\Form\Text( 'sod_txt_widget_title', isset( $this->configuration['sod_txt_widget_title'] ) ? $this->configuration['sod_txt_widget_title'] : '', FALSE ) );
+		$form->add( new \IPS\Helpers\Form\Text( 'sod_txt_widget_desc', isset( $this->configuration['sod_txt_widget_desc'] ) ? $this->configuration['sod_txt_widget_desc'] : '', FALSE ) );
+		$form->add( new \IPS\Helpers\Form\TextArea( 'sod_txt_widget_text', isset( $this->configuration['sod_txt_widget_text'] ) ? $this->configuration['sod_txt_widget_text'] : '', TRUE, array('rows' => 7) ) );
+		$form->add( new \IPS\Helpers\Form\Select( 'sod_txt_widget_who_can_see', isset( $this->configuration['sod_txt_widget_who_can_see'] ) ? $this->configuration['sod_txt_widget_who_can_see'] : '', TRUE, array( 'options' => \IPS\Member\Group::groups(), 'parse' => 'normal', 'multiple' => true, 'unlimited' => '*', 'unlimitedLang' => 'everyone' ) ) );
+
+ 		return $form;
+ 	} 
+ 	
+ 	 /**
+ 	 * Ran before saving widget configuration
+ 	 *
+ 	 * @param	array	$values	Values from form
+ 	 * @return	array
+ 	 */
+ 	public function preConfig( $values )
+ 	{
+ 		return $values;
+ 	}
+
+	/**
+	 * Render a widget
+	 *
+	 * @return	string
+	 */
+	public function render()
+	{
+		$this->configuration['sod_txt_widget_title'] 			= isset($this->configuration['sod_txt_widget_title']) ?$this->configuration['sod_txt_widget_title']: '';
+		$this->configuration['sod_txt_widget_desc'] 			= isset($this->configuration['sod_txt_widget_desc']) ?$this->configuration['sod_txt_widget_desc']: '';
+		$this->configuration['sod_txt_widget_text'] 			= isset($this->configuration['sod_txt_widget_text']) ?$this->configuration['sod_txt_widget_text']: '';
+		$this->configuration['sod_txt_widget_who_can_see'] 		= isset($this->configuration['sod_txt_widget_who_can_see']) ?$this->configuration['sod_txt_widget_who_can_see']: '';
+
+		if ( $this->configuration['sod_txt_widget_who_can_see'] != '*' && !\IPS\Member::loggedIn()->inGroup( $this->configuration['sod_txt_widget_who_can_see'], TRUE ) || empty($this->configuration['sod_txt_widget_text']) ) {
+			return '';
+		}
+
+		return $this->output( $this->configuration['sod_txt_widget_title'], $this->configuration['sod_txt_widget_text'], $this->configuration['sod_txt_widget_desc'] );
+	}
+}]]></widget></widgets><htmlFiles><html filename="sodPhpWidget.phtml">PGlwczp0ZW1wbGF0ZSBwYXJhbWV0ZXJzPSIkdGl0bGUsICRjb250ZW50LCAkZGVzYywgJG9yaWVudGF0aW9uPSd2ZXJ0aWNhbCciIC8+Cnt7aWYgJHRpdGxlICE9IG51bGx9fQoJPGgzIGNsYXNzPSdpcHNUeXBlX3Jlc2V0IGlwc1dpZGdldF90aXRsZSc+JHRpdGxlPC9oMz4Ke3tlbmRpZn19CjxkaXYgY2xhc3M9J2lwc1dpZGdldF9pbm5lciB7e2lmICRvcmllbnRhdGlvbiA9PSAndmVydGljYWwnfX1pcHNQYWR7e2VuZGlmfX0nPgoJe3tpZiAkZGVzYyAhPSBudWxsfX0KCQk8c3BhbiBjbGFzcz0naXBzVHlwZV9saWdodCBpcHNUeXBlX3VuYm9sZCBpcHNUeXBlX21lZGl1bSc+JGRlc2M8L3NwYW4+Cgl7e2VuZGlmfX0KCXt7aWYgJGNvbnRlbnQgIT0gbnVsbH19CgkJPHAgY2xhc3M9J2lwc1R5cGVfcmVzZXQgaXBzVHlwZV9tZWRpdW0gaXBzVHlwZV9saWdodCc+eyRjb250ZW50fHJhd308L3A+Cgl7e2VuZGlmfX0KPC9kaXY+</html><html filename="sodTxtWidget.phtml">PGlwczp0ZW1wbGF0ZSBwYXJhbWV0ZXJzPSIkdGl0bGUsICRjb250ZW50LCAkZGVzYywgJG9yaWVudGF0aW9uPSd2ZXJ0aWNhbCciIC8+Cnt7aWYgJHRpdGxlICE9IG51bGx9fQoJPGgzIGNsYXNzPSdpcHNUeXBlX3Jlc2V0IGlwc1dpZGdldF90aXRsZSc+JHRpdGxlPC9oMz4Ke3tlbmRpZn19CjxkaXYgY2xhc3M9J2lwc1dpZGdldF9pbm5lciB7e2lmICRvcmllbnRhdGlvbiA9PSAndmVydGljYWwnfX1pcHNQYWR7e2VuZGlmfX0nPgoJe3tpZiAkZGVzYyAhPSBudWxsfX0KCQk8c3BhbiBjbGFzcz0naXBzVHlwZV9saWdodCBpcHNUeXBlX3VuYm9sZCBpcHNUeXBlX21lZGl1bSc+JGRlc2M8L3NwYW4+Cgl7e2VuZGlmfX0KCXt7aWYgJGNvbnRlbnQgIT0gbnVsbH19CgkJPHAgY2xhc3M9J2lwc1R5cGVfcmVzZXQgaXBzVHlwZV9tZWRpdW0gaXBzVHlwZV9saWdodCc+eyRjb250ZW50fHJhd308L3A+Cgl7e2VuZGlmfX0KPC9kaXY+</html></htmlFiles><cssFiles/><jsFiles/><resourcesFiles/><lang><word key="block_sodTxtWidget" js="0">Custom Text</word><word key="block_sodTxtWidget_desc" js="0">Show a custom text</word><word key="block_sodPhpWidget" js="0">PHP Code</word><word key="block_sodPhpWidget_desc" js="0"><![CDATA[Run PHP code & show result]]></word><word key="sod_txt_widget_title" js="0">Widget Title</word><word key="sod_txt_widget_desc" js="0">Widget Description</word><word key="sod_txt_widget_text" js="0">Widget Contents</word><word key="sod_txt_widget_text_desc" js="0">HTML Supported</word><word key="sod_txt_widget_who_can_see" js="0">Who Can See</word><word key="sod_php_widget_title" js="0">Widget Title</word><word key="sod_php_widget_desc" js="0">Widget Description</word><word key="sod_php_widget_text" js="0">Widget Contents</word><word key="sod_php_widget_who_can_see" js="0">Who Can See</word><word key="sod_php_txt_widget_active_php" js="0">Active PHP Widget</word></lang><versions><version long="10000" human="1.0.0"><![CDATA[//<?php
+
+
+/* To prevent PHP errors (extending class does not exist) revealing path */
+if ( !defined( '\IPS\SUITE_UNIQUE_KEY' ) )
+{
+	header( ( isset( $_SERVER['SERVER_PROTOCOL'] ) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0' ) . ' 403 Forbidden' );
+	exit;
+}
+
+/**
+ * Install Code
+ */
+class ips_plugins_setup_install
+{
+	/**
+	 * ...
+	 *
+	 * @return	array	If returns TRUE, upgrader will proceed to next step. If it returns any other value, it will set this as the value of the 'extra' GET parameter and rerun this step (useful for loops)
+	 */
+	public function step1()
+	{
+		
+	}
+	
+	// You can create as many additional methods (step2, step3, etc.) as is necessary.
+	// Each step will be executed in a new HTTP request
+}]]></version></versions></plugin>
